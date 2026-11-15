@@ -61,7 +61,7 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
   const treeUrl = () => `${location.origin}/t/${id}`;
 
   async function share() {
-    const text = `내 트리를 꾸며줘 🎄 붕어빵이나 귤 하나 달아줘! 메시지는 크리스마스에 열어볼게`;
+    const text = `내 트리를 꾸며줘 🎄 오너먼트 하나 달아줘! 메시지는 크리스마스에 열어볼게`;
     try {
       if (navigator.share) {
         await navigator.share({ title: `${tree.name}님의 트리`, text, url: treeUrl() });
@@ -291,7 +291,7 @@ function Picked({ ornament: o, tree, onClose, onHide }: { ornament: Ornament; tr
 }
 
 function HangSheet({ id, owner, onClose, onDone }: { id: string; owner: string; onClose: () => void; onDone: (slot: number) => void }) {
-  const [kind, setKind] = useState<Kind>("bungeoppang");
+  const [kind, setKind] = useState<Kind>("ball");
   const [author, setAuthor] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -334,7 +334,7 @@ function HangSheet({ id, owner, onClose, onDone }: { id: string; owner: string; 
       <form onSubmit={submit} className="flex flex-col gap-4">
         <h2 className="m-0 font-display text-[22px] leading-tight font-bold text-bulb-100">{owner}님 트리에 뭘 달아줄까요?</h2>
 
-        <fieldset className="m-0 grid grid-cols-3 gap-2 border-0 p-0">
+        <fieldset className="m-0 grid grid-cols-4 gap-2 border-0 p-0">
           <legend className="sr-only">오너먼트 고르기</legend>
           {KINDS.map((k) => (
             <label
@@ -344,8 +344,8 @@ function HangSheet({ id, owner, onClose, onDone }: { id: string; owner: string; 
               }`}
             >
               <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} className="sr-only" />
-              <OrnamentArt kind={k} size={46} loop={false} />
-              <span className={`text-[13px] ${kind === k ? "font-semibold text-bulb-300" : "text-muted"}`}>{KIND_NAME[k]}</span>
+              <OrnamentArt kind={k} size={40} loop={false} />
+              <span className={`text-xs whitespace-nowrap ${kind === k ? "font-semibold text-bulb-300" : "text-muted"}`}>{KIND_NAME[k]}</span>
             </label>
           ))}
         </fieldset>

@@ -3,7 +3,7 @@
 A Christmas web app from **향수병 게임즈** (Homesick Games) — small web games I make in Toronto because I miss Korea.
 
 Make a tree, send the link to friends and family, and they hang an ornament with a short message.
-The ornaments are Korean winter street snacks instead of glass balls: 붕어빵, 호떡, 귤, 군고구마, 호빵, 계란빵.
+There are 8 hand-drawn ornaments: ball, star, bell, candy cane, stocking, gift, snowman and gingerbread.
 Anyone can see who hung what, but **only the tree owner can read the messages, and only on Christmas** (Dec 25, Korea time).
 
 ## How it works

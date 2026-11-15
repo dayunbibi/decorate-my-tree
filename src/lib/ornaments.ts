@@ -1,14 +1,16 @@
-// Ornaments are Korean winter street snacks instead of glass balls.
-export const KINDS = ["bungeoppang", "hotteok", "gyul", "goguma", "hoppang", "gyeranppang"] as const;
+// classic Christmas ornaments
+export const KINDS = ["ball", "star", "bell", "candycane", "stocking", "gift", "snowman", "gingerbread"] as const;
 export type Kind = (typeof KINDS)[number];
 
 export const KIND_NAME: Record<Kind, string> = {
-  bungeoppang: "붕어빵",
-  hotteok: "호떡",
-  gyul: "귤",
-  goguma: "군고구마",
-  hoppang: "호빵",
-  gyeranppang: "계란빵",
+  ball: "빨간 구슬",
+  star: "별",
+  bell: "종",
+  candycane: "지팡이 사탕",
+  stocking: "양말",
+  gift: "선물 상자",
+  snowman: "눈사람",
+  gingerbread: "진저브레드",
 };
 
 export type Ornament = { id: number; kind: Kind; author: string; slot: number; message?: string };

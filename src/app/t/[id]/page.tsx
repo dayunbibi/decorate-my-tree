@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tree = await load((await params).id);
   if (!tree) return { title: "내 트리를 꾸며줘" };
   const title = `${tree.name}님의 트리를 꾸며줘 🎄`;
-  const description = `오너먼트 ${tree.ornaments.length}개 달렸어요. 붕어빵이나 귤 하나 달아주세요! 메시지는 크리스마스에 열려요.`;
+  const description = `오너먼트 ${tree.ornaments.length}개 달렸어요. 오너먼트 하나 달아주세요! 메시지는 크리스마스에 열려요.`;
   return { title, description, openGraph: { title, description }, twitter: { title, description } };
 }
 

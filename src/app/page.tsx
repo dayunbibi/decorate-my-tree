@@ -34,13 +34,13 @@ export default function Home() {
         </div>
 
         <div className="mt-4">
-          <TreeView ornaments={SAMPLE} label="붕어빵, 호떡, 귤 오너먼트가 달린 크리스마스 트리 예시" />
+          <TreeView ornaments={SAMPLE} label="오너먼트가 달린 크리스마스 트리 예시" />
         </div>
 
         <p className="m-0 mt-2 text-center text-[15px] leading-relaxed">
-          유리 구슬 대신 붕어빵, 호떡, 귤로 꾸미는 트리.
+          친구, 가족이 오너먼트에 메시지를 달아주는 트리.
           <br />
-          친구들이 달아준 메시지는 크리스마스에 열려요.
+          멀리 있어도 크리스마스에 같이 열어봐요.
         </p>
 
         <ol className="m-0 mt-6 grid list-none grid-cols-3 gap-2 p-0">

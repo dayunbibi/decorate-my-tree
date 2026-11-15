@@ -17,7 +17,7 @@ create table if not exists public.trees (
 create table if not exists public.ornaments (
   id bigint generated always as identity primary key,
   tree_id text not null references public.trees (id) on delete cascade,
-  kind text not null check (kind in ('bungeoppang', 'hotteok', 'gyul', 'goguma', 'hoppang', 'gyeranppang')),
+  kind text not null check (kind in ('ball', 'star', 'bell', 'candycane', 'stocking', 'gift', 'snowman', 'gingerbread')),
   author text not null check (char_length(author) between 1 and 10),
   message text not null check (char_length(message) between 1 and 120),
   slot int not null,

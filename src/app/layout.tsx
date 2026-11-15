@@ -9,10 +9,10 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "내 트리를 꾸며줘",
-  description: "붕어빵, 호떡, 귤로 친구 트리를 꾸며주세요. 메시지는 크리스마스에 열려요.",
+  description: "친구 트리에 오너먼트를 달고 메시지를 남겨주세요. 메시지는 크리스마스에 열려요.",
   openGraph: {
     title: "내 트리를 꾸며줘 🎄",
-    description: "붕어빵, 호떡, 귤로 친구 트리를 꾸며주세요. 메시지는 크리스마스에 열려요.",
+    description: "친구 트리에 오너먼트를 달고 메시지를 남겨주세요. 메시지는 크리스마스에 열려요.",
     locale: "ko_KR",
     type: "website",
   },
