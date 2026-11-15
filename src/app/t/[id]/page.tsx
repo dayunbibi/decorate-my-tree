@@ -4,7 +4,6 @@ import { cache } from "react";
 import { dbEnabled, getTree } from "@/lib/server/db";
 import Snow from "@/components/Snow";
 import TreeClient from "@/components/TreeClient";
-import Footer from "@/components/Footer";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -35,9 +34,8 @@ export default async function TreePage({ params }: Props) {
   return (
     <>
       <Snow />
-      <main className="relative z-1 mx-auto max-w-[440px] px-4 pt-6 pb-[130px]">
+      <main className="relative z-1 mx-auto flex min-h-dvh max-w-[440px] flex-col px-[15px] pt-6 pb-[calc(22px+env(safe-area-inset-bottom))]">
         <TreeClient id={id} initial={tree} />
-        <Footer />
       </main>
     </>
   );

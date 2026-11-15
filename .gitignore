@@ -43,3 +43,6 @@ next-env.d.ts
 # keep the example env file
 !.env.example
 
+
+# design handoff reference (kept local)
+/design/

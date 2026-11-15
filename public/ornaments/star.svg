@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="별">
+<circle cx="24" cy="4.6" r="2.3" fill="none" stroke="#E9C46A" stroke-width="1.4"></circle>
+      <path d="M24 8 L28.8 20.4 L42.1 21.1 L31.8 29.5 L35.2 42.4 L24 35.2 L12.8 42.4 L16.2 29.5 L5.9 21.1 L19.2 20.4Z" transform="translate(.6 1.4)" fill="#B9791C" stroke="#7A4A0E" stroke-opacity=".6" stroke-width="2.6" stroke-linejoin="round"></path>
+      <path d="M24 8 L28.8 20.4 L42.1 21.1 L31.8 29.5 L35.2 42.4 L24 35.2 L12.8 42.4 L16.2 29.5 L5.9 21.1 L19.2 20.4Z" fill="#F4BE4F" stroke="#F4BE4F" stroke-width="1.8" stroke-linejoin="round"></path>
+      <path d="M24 8 L19.2 20.4 L5.9 21.1 L16.2 29.5 L24 26.5Z" fill="#FFE29A" opacity=".6"></path>
+      <circle cx="19.5" cy="18.5" r="1.6" fill="#ffffff" opacity=".85"></circle>
+</svg>

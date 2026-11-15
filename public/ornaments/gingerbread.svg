@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="진저브레드">
+<g fill="#B9773E" stroke="#2A140C" stroke-opacity=".55" stroke-width="2.6" stroke-linejoin="round">
+        <circle cx="24" cy="11.5" r="7.3"></circle>
+        <rect x="8.5" y="19" width="31" height="7.4" rx="3.7"></rect>
+        <rect x="16" y="17" width="16" height="18" rx="6"></rect>
+        <path d="M17 31 L13.2 41.6 C12.2 44.4 16.2 46 17.6 43.4 L24 35.5 L30.4 43.4 C31.8 46 35.8 44.4 34.8 41.6 L31 31Z"></path>
+      </g>
+      <g fill="#C9884A">
+        <circle cx="24" cy="11.5" r="7.3"></circle>
+        <rect x="8.5" y="19" width="31" height="7.4" rx="3.7"></rect>
+        <rect x="16" y="17" width="16" height="18" rx="6"></rect>
+        <path d="M17 31 L13.2 41.6 C12.2 44.4 16.2 46 17.6 43.4 L24 35.5 L30.4 43.4 C31.8 46 35.8 44.4 34.8 41.6 L31 31Z"></path>
+      </g>
+      <circle cx="21" cy="8.6" r="2" fill="#E0A66A" opacity=".8"></circle>
+      <g stroke="#FFF6EA" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.4 20.4 L12.8 22.7 L11.4 25"></path>
+        <path d="M36.6 20.4 L35.2 22.7 L36.6 25"></path>
+        <path d="M14.4 40.6 Q16 42.2 17.8 41"></path>
+        <path d="M33.6 40.6 Q32 42.2 30.2 41"></path>
+        <path d="M21.2 13.6 Q24 16.2 26.8 13.6"></path>
+      </g>
+      <circle cx="21.6" cy="10.4" r="1.15" fill="#3A1E14"></circle><circle cx="26.4" cy="10.4" r="1.15" fill="#3A1E14"></circle>
+      <circle cx="24" cy="22.4" r="1.7" fill="#D9493C"></circle><circle cx="24" cy="28.4" r="1.7" fill="#F4BE4F"></circle>
+</svg>

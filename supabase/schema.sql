@@ -140,9 +140,10 @@ as $$
       'name', (select name from t),
       'owner', (select is_owner from t),
       'open', now() >= p_open_at,
+      'next', (select coalesce(max(slot) + 1, 0) from public.ornaments where tree_id = p_tree), -- where the next one goes
       'ornaments', coalesce((
         select jsonb_agg(
-          jsonb_build_object('id', o.id, 'kind', o.kind, 'author', o.author, 'slot', o.slot)
+          jsonb_build_object('id', o.id, 'kind', o.kind, 'author', o.author, 'slot', o.slot, 'at', o.created_at)
           || case when (select is_owner from t) and now() >= p_open_at
                then jsonb_build_object('message', o.message) else '{}'::jsonb end
           order by o.slot)

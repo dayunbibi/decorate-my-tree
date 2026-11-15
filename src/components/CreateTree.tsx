@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readMine, saveMine, type Mine } from "@/lib/myTrees";
-import BottomBar from "./BottomBar";
+import { TreeIcon } from "./Icons";
 
 export default function CreateTree() {
   const router = useRouter();
@@ -38,47 +38,41 @@ export default function CreateTree() {
   const myIds = Object.keys(mine);
 
   return (
-    <div className="flex flex-col gap-3">
-      <form id="create" onSubmit={create} className="card flex flex-col gap-3 p-5">
-        <label htmlFor="owner-name" className="font-display text-[19px] leading-none font-bold">
-          트리 주인 이름
-        </label>
+    <form onSubmit={create} className="flex w-full flex-col gap-2.5">
+      <label htmlFor="owner-name" className="text-[13px] font-semibold text-muted">
+        트리 주인 이름
+      </label>
+      <div className="flex h-[52px] items-center rounded-[14px] border border-line bg-night-700 px-4 focus-within:border-gold">
         <input
           id="owner-name"
-          className="field h-12"
+          className="min-w-0 flex-1 border-0 bg-transparent text-base text-cream outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={12}
           required
-          placeholder="친구들이 아는 이름이나 닉네임"
+          placeholder="예) 다윤"
           autoComplete="nickname"
         />
-        {error && (
-          <p role="alert" className="m-0 text-sm text-berry-300">
-            {error}
-          </p>
-        )}
-        <p className="m-0 text-xs leading-relaxed text-dim">트리는 로그인 없이 만들어져요. 이 기기에 열쇠가 저장되고, 다른 기기용 열쇠 링크도 따로 드려요.</p>
-      </form>
-
+        <span className="flex-none text-[15px] text-muted">님의 트리</span>
+      </div>
+      {error && (
+        <p role="alert" className="m-0 text-sm text-[#ff8a7a]">
+          {error}
+        </p>
+      )}
+      <button type="submit" className="btn mt-1" disabled={busy}>
+        <TreeIcon />
+        {busy ? "트리 심는 중…" : "내 트리 만들기"}
+      </button>
       {myIds.length > 0 && (
-        <div className="card flex flex-col gap-1 p-4">
-          <p className="m-0 text-sm font-semibold text-muted">이 기기에서 만든 트리</p>
+        <p className="m-0 flex flex-wrap justify-center gap-x-3 text-sm">
           {myIds.map((id) => (
-            <Link key={id} href={`/t/${id}`} className="flex h-11 items-center justify-between rounded-xl px-2 text-[15px] font-medium hover:bg-night-700">
-              <span>{mine[id].name}님의 트리</span>
-              <span className="text-bulb-300">보러 가기 →</span>
+            <Link key={id} href={`/t/${id}`} className="py-1 font-medium text-gold">
+              {mine[id].name}님의 트리 보러 가기 →
             </Link>
           ))}
-        </div>
+        </p>
       )}
-
-      {/* the submit button lives in the bottom bar, so it points at the form by id */}
-      <BottomBar>
-        <button type="submit" form="create" className="btn" disabled={busy || !name.trim()}>
-          {busy ? "트리 심는 중…" : "🎄 내 트리 만들기"}
-        </button>
-      </BottomBar>
-    </div>
+    </form>
   );
 }

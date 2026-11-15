@@ -13,11 +13,10 @@ export const KIND_NAME: Record<Kind, string> = {
   gingerbread: "진저브레드",
 };
 
-export type Ornament = { id: number; kind: Kind; author: string; slot: number; message?: string };
-export type Tree = { name: string; owner: boolean; open: boolean; ornaments: Ornament[] };
+export type Ornament = { id: number; kind: Kind; author: string; slot: number; at?: string; message?: string };
+export type Tree = { name: string; owner: boolean; open: boolean; next: number; ornaments: Ornament[] };
 
 export const MAX_ORNAMENTS = 120;
-export const PER_PAGE = 20; // spots on one tree picture
 
 // Messages open on Christmas, Korea time (most friends are there).
 // NEXT_PUBLIC_OPEN_AT lets me test the "after Christmas" screen locally.

@@ -2,27 +2,31 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { KIND_NAME, KINDS, MAX_ORNAMENTS, OPEN_AT, PER_PAGE, type Kind, type Ornament, type Tree } from "@/lib/ornaments";
+import { KIND_NAME, KINDS, MAX_ORNAMENTS, OPEN_AT, type Kind, type Ornament as O, type Tree } from "@/lib/ornaments";
+import { PER_PAGE, pageOf } from "@/lib/slots";
 import { daysUntil, readMine, saveMine } from "@/lib/myTrees";
 import { copyText } from "@/lib/copy";
+import { hungOn, makeCardImage } from "@/lib/cardImage";
 import TreeView from "./TreeView";
-import OrnamentArt from "./OrnamentArt";
-import BottomBar from "./BottomBar";
+import Ornament from "./Ornament";
+import { DownloadIcon, KeyIcon, LockIcon, NextIcon, OrnamentIcon, PrevIcon, ShareIcon } from "./Icons";
 
 const AUTHOR_KEY = "my-author-name";
+const AVATAR_COLORS = ["bg-ornament-red", "bg-pine", "bg-[#b9773e]"];
 
 export default function TreeClient({ id, initial }: { id: string; initial: Tree }) {
   const [tree, setTree] = useState(initial);
   const [key, setKey] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(false);
-  const [page, setPage] = useState(0);
-  const [picked, setPicked] = useState<Ornament | null>(null);
+  const [page, setPage] = useState(pageOf(initial.next));
+  const [picked, setPicked] = useState<O | null>(null);
   const [hanging, setHanging] = useState(false);
   const [fresh, setFresh] = useState<number | null>(null);
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState("");
   const [days, setDays] = useState<number | null>(null);
   const [manual, setManual] = useState<{ title: string; link: string; note: string } | null>(null);
+  const [showTree, setShowTree] = useState(false); // owner after Christmas: cards first, tree on request
 
   const refresh = useCallback(
     async (ownerKey = key) => {
@@ -47,7 +51,7 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
     setKey(k);
     if (new URLSearchParams(location.search).get("new") === "1") {
       setIsNew(true);
-      history.replaceState(null, "", location.pathname); // the welcome card only shows once
+      history.replaceState(null, "", location.pathname); // the welcome note only shows once
     }
     setDays(daysUntil(OPEN_AT));
     if (k) refresh(k);
@@ -57,7 +61,7 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
 
   function flash(msg: string) {
     setToast(msg);
-    setTimeout(() => setToast(""), 2200);
+    setTimeout(() => setToast(""), 2400);
   }
 
   const treeUrl = () => `${location.origin}/t/${id}`;
@@ -80,10 +84,10 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
   async function copyKeyLink() {
     const link = `${treeUrl()}#k=${key}`;
     if (await copyText(link)) flash("열쇠 링크를 복사했어요. 나만 아는 곳에 저장해 두세요");
-    else setManual({ title: "🔑 열쇠 링크", link, note: "꾹 눌러서 복사한 다음 메모장 같은 나만 보는 곳에 저장해 두세요. 친구한테는 보내지 마세요!" });
+    else setManual({ title: "열쇠 링크", link, note: "꾹 눌러서 복사한 다음 메모장 같은 나만 보는 곳에 저장해 두세요. 친구한테는 보내지 마세요!" });
   }
 
-  async function hide(o: Ornament) {
+  async function hide(o: O) {
     const res = await fetch(`/api/trees/${id}/hide`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-owner-key": key ?? "" },
@@ -100,120 +104,153 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
     setHanging(false);
     setAdded(true);
     setFresh(slot);
-    setPage(Math.floor(slot / PER_PAGE));
+    setPage(pageOf(slot));
     await refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const count = tree.ornaments.length;
-  const pages = Math.max(1, Math.ceil((Math.max(0, ...tree.ornaments.map((o) => o.slot)) + 1) / PER_PAGE));
   const owner = tree.owner;
-  const full = tree.ornaments.some((o) => o.slot >= MAX_ORNAMENTS - 1);
+  const count = tree.ornaments.length;
+  const full = tree.next >= MAX_ORNAMENTS;
+  const pages = Math.max(1, pageOf(Math.max(0, tree.next - 1)) + 1, pageOf(tree.next) + (full ? 0 : 1));
+  const freeHere = full ? 0 : Math.min((pageOf(tree.next) + 1) * PER_PAGE, MAX_ORNAMENTS) - tree.next;
+
+  const toastEl = (
+    <p role="status" className="pointer-events-none fixed inset-x-0 bottom-[110px] z-50 m-0 text-center">
+      {toast && <span className="inline-block animate-sheet rounded-full border border-line bg-night-800 px-4 py-2.5 text-sm text-cream shadow-lg">{toast}</span>}
+    </p>
+  );
+
+  // Dec 25, owner: one card at a time
+  if (owner && tree.open && !showTree) {
+    return (
+      <>
+        <Reveal tree={tree} onShowTree={() => setShowTree(true)} flash={flash} />
+        {toastEl}
+      </>
+    );
+  }
+
+  // the people who hung ornaments, newest first, one bubble each
+  const authors = [...new Set([...tree.ornaments].sort((a, b) => b.slot - a.slot).map((o) => o.author))];
 
   return (
     <>
-      <header className="text-center">
-        <span className="inline-block rounded-full bg-night-950/60 px-3 py-1.5 text-xs leading-none font-medium text-bulb-300 ring-1 ring-bulb-300/35 ring-inset">
-          {tree.open ? "메리 크리스마스! 🎁" : days === null ? "12월 25일에 열려요" : days === 0 ? "오늘 열려요!" : `D-${days} · 12월 25일에 열려요`}
-        </span>
-        <h1 className="m-0 mt-3 font-display text-[34px] leading-tight font-bold text-bulb-100 [text-shadow:0_0_24px_rgb(255_210_122/0.4)]">
-          {tree.name}님의 트리
-        </h1>
-        <p className="m-0 mt-1.5 text-[15px] text-muted">
-          오너먼트 <span className="font-mono font-bold text-bulb-300">{count}</span>개 달렸어요
+      <header className="flex flex-col items-center text-center">
+        {tree.open ? (
+          <p className="chip m-0 bg-gold font-bold text-[#2a1a08]">12월 25일 · 메리 크리스마스</p>
+        ) : (
+          <p className="chip m-0 border border-gold/45 bg-gold/10 font-semibold text-gold">
+            <LockIcon />
+            {days === null ? "12월 25일에 열려요" : days === 0 ? "오늘 밤 열려요!" : `D-${days} · 12월 25일에 열려요`}
+          </p>
+        )}
+        <h1 className="title mt-3 text-[34px] leading-[1.25] tracking-[-0.8px]">{tree.name}님의 트리</h1>
+        <p className="m-0 mt-1 text-sm text-muted">
+          오너먼트 <b className="font-bold text-gold">{count}</b>개 달렸어요{!full && <> · 빈자리 {freeHere}곳</>}
         </p>
       </header>
 
-      <div className="relative mt-3">
-        <TreeView ornaments={tree.ornaments} page={page} fresh={fresh} onPick={setPicked} label={`${tree.name}님의 트리, 오너먼트 ${count}개`} />
-        {count === 0 && (
-          <p className="absolute inset-x-0 top-[42%] m-0 text-center">
-            <span className="inline-block rounded-full bg-night-950/85 px-4 py-2.5 text-[15px] font-semibold text-bulb-100 ring-1 ring-bulb-300/30">
-              {owner ? "아직 텅 비었어요. 링크를 보내보세요!" : "첫 번째 오너먼트를 달아주세요!"}
-            </span>
-          </p>
-        )}
+      <div className="relative mx-auto mt-1.5 w-full max-w-[360px]">
+        <TreeView
+          ornaments={tree.ornaments}
+          page={page}
+          next={full || owner ? null : tree.next}
+          showEmpty
+          fresh={fresh}
+          onPick={setPicked}
+          onNext={() => setHanging(true)}
+          label={`${tree.name}님의 트리, 오너먼트 ${count}개`}
+        />
       </div>
 
       {pages > 1 && (
         <div className="mt-1 flex items-center justify-center gap-4">
-          <button type="button" className="size-10 rounded-full bg-night-800 text-lg ring-1 ring-night-line" onClick={() => setPage((p) => p - 1)} disabled={page === 0} aria-label="이전 트리 페이지">
-            ‹
+          <button type="button" className="flex size-11 items-center justify-center rounded-full border border-line bg-night-700" onClick={() => setPage((p) => p - 1)} disabled={page === 0} aria-label="이전 트리 페이지">
+            <PrevIcon />
           </button>
-          <span className="font-mono text-sm text-muted">
-            {page + 1} / {pages}
+          <span className="min-w-[52px] text-center text-sm font-semibold text-muted">
+            <b className="text-cream">{page + 1}</b> / {pages}
           </span>
-          <button type="button" className="size-10 rounded-full bg-night-800 text-lg ring-1 ring-night-line" onClick={() => setPage((p) => p + 1)} disabled={page >= pages - 1} aria-label="다음 트리 페이지">
-            ›
+          <button type="button" className="flex size-11 items-center justify-center rounded-full border border-line bg-night-700" onClick={() => setPage((p) => p + 1)} disabled={page >= pages - 1} aria-label="다음 트리 페이지">
+            <NextIcon />
           </button>
         </div>
       )}
 
-      <div className="mt-5 flex flex-col gap-3">
+      {authors.length > 0 && (
+        <div className="mt-1.5 flex items-center justify-center gap-2.5">
+          <div className="flex" aria-hidden="true">
+            {authors.slice(0, 3).map((a, i) => (
+              <span key={a} className={`flex size-7 items-center justify-center rounded-full border-2 border-night-900 text-xs font-bold text-on-ember ${AVATAR_COLORS[i]} ${i ? "-ml-2" : ""}`}>
+                {[...a][0]}
+              </span>
+            ))}
+            {authors.length > 3 && <span className="-ml-2 flex size-7 items-center justify-center rounded-full border-2 border-night-900 bg-night-700 text-[11px] font-semibold text-muted">+{authors.length - 3}</span>}
+          </div>
+          <p className="m-0 text-[13px] text-muted">
+            <b className="font-semibold text-cream">{authors.slice(0, 3).join(", ")}</b>
+            {authors.length > 3 ? ` 외 ${authors.length - 3}명이` : "님이"} 달아줬어요
+          </p>
+        </div>
+      )}
+
+      <div className="mt-auto flex w-full flex-col gap-3 pt-5">
         {owner ? (
           <>
-            {isNew && (
-              <div className="card p-5 text-center">
-                <p className="m-0 font-display text-xl font-bold text-bulb-100">트리가 생겼어요! 🎄</p>
-                <p className="m-0 mt-2 text-sm leading-relaxed text-muted">아래 버튼으로 링크를 보내면 친구들이 오너먼트를 달아줄 수 있어요.</p>
-              </div>
-            )}
-            <div className="card p-5">
-              <p className="m-0 text-[15px] leading-relaxed">
-                {tree.open ? (
-                  <>오너먼트를 눌러서 메시지를 읽어보세요 💌</>
-                ) : (
-                  <>
-                    누가 달았는지는 지금도 보이고, <b className="text-bulb-300">메시지는 크리스마스에</b> 열려요.
-                  </>
-                )}
-              </p>
-              <hr className="my-4 border-0 border-t border-dashed border-night-line" />
-              <p className="m-0 text-sm font-semibold">🔑 열쇠 링크</p>
-              <p className="m-0 mt-1 text-[13px] leading-relaxed text-muted">
-                이 기기에선 자동으로 주인으로 열려요. 폰을 바꾸거나 다른 브라우저에서 열 땐 열쇠 링크가 필요해요. <b className="text-cream">친구한테는 보내지 마세요!</b>
-              </p>
-              <button type="button" className="btn btn-ghost mt-3 h-11 text-[15px]" onClick={copyKeyLink}>
-                열쇠 링크 복사하기
+            <Notice>
+              {isNew ? (
+                <>
+                  트리가 생겼어요! 링크를 보내면 친구들이 오너먼트를 달아줘요. 메시지는 <b className="font-semibold text-cream">크리스마스에</b> 열려요.
+                </>
+              ) : tree.open ? (
+                <>오너먼트를 누르면 메시지를 볼 수 있어요.</>
+              ) : (
+                <>
+                  누가 달았는지는 지금도 보이고, 메시지는 <b className="font-semibold text-cream">크리스마스에</b> 열어볼 수 있어요.
+                </>
+              )}
+            </Notice>
+            {tree.open ? (
+              <button type="button" className="btn" onClick={() => setShowTree(false)}>
+                메시지 카드로 보기
               </button>
-            </div>
+            ) : (
+              <button type="button" className="btn" onClick={share}>
+                <ShareIcon />
+                링크 보내고 꾸며달라기
+              </button>
+            )}
+            <button type="button" onClick={copyKeyLink} className="flex items-center justify-center gap-1.5 self-center px-2 py-1 text-sm font-medium text-muted">
+              <KeyIcon size={16} />
+              다른 기기용 열쇠 링크 복사
+            </button>
           </>
         ) : (
-          added && (
-            <div className="card p-5 text-center">
-              <p className="m-0 font-display text-xl font-bold text-bulb-100">오너먼트를 달았어요!</p>
-              <p className="m-0 mt-2 text-sm leading-relaxed text-muted">{tree.name}님이 크리스마스에 읽을 수 있어요.</p>
-              <Link href="/" className="mt-3 inline-block text-[15px] font-semibold text-bulb-300 underline underline-offset-4">
-                나도 트리 만들기 →
-              </Link>
-            </div>
-          )
+          <>
+            <Notice>
+              {added ? (
+                <>
+                  달았어요! <b className="font-semibold text-cream">{tree.name}님이 크리스마스에</b> 읽을 수 있어요.
+                </>
+              ) : (
+                <>
+                  누가 달았는지는 지금도 보이지만, 메시지는 <b className="font-semibold text-cream">{tree.name}님만 크리스마스에</b> 열어볼 수 있어요.
+                </>
+              )}
+            </Notice>
+            <button type="button" className="btn" onClick={() => setHanging(true)} disabled={full}>
+              <OrnamentIcon />
+              {full ? "트리가 꽉 찼어요" : added ? "하나 더 달아주기" : "오너먼트 달아주기"}
+            </button>
+            <Link href="/" className="self-center px-2 py-1 text-sm font-medium text-muted no-underline">
+              나도 내 트리 만들기 →
+            </Link>
+          </>
         )}
       </div>
 
-      <p role="status" className="fixed inset-x-0 bottom-[96px] z-30 m-0 text-center">
-        {toast && <span className="inline-block animate-sheet rounded-full bg-night-950/90 px-4 py-2.5 text-sm text-cream ring-1 ring-night-line">{toast}</span>}
-      </p>
-
-      <BottomBar>
-        {owner ? (
-          <button type="button" className="btn" onClick={share}>
-            🔗 링크 보내고 꾸며달라기
-          </button>
-        ) : (
-          <>
-            {added && (
-              <Link href="/" className="btn btn-ghost w-[42%] text-base no-underline">
-                내 트리 만들기
-              </Link>
-            )}
-            <button type="button" className="btn flex-1" onClick={() => setHanging(true)} disabled={full}>
-              {full ? "트리가 꽉 찼어요" : added ? "하나 더 달기" : "🎁 오너먼트 달아주기"}
-            </button>
-          </>
-        )}
-      </BottomBar>
-
+      {toastEl}
       {picked && <Picked ornament={picked} tree={tree} onClose={() => setPicked(null)} onHide={hide} />}
       {manual && <ManualCopy {...manual} onClose={() => setManual(null)} />}
       {hanging && <HangSheet id={id} owner={tree.name} onClose={() => setHanging(false)} onDone={onHung} />}
@@ -221,7 +258,16 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
   );
 }
 
-// bottom sheet with a dark backdrop; Escape or tapping outside closes it
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="m-0 flex items-start gap-2 rounded-input border border-line bg-night-800/85 px-3.5 py-2.5 text-[13px] leading-normal text-muted">
+      <LockIcon size={16} className="mt-0.5 flex-none text-gold" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+// bottom sheet over the dimmed page; Escape or tapping outside closes it
 function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -238,7 +284,7 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-night-950/70 backdrop-blur-[2px]" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgb(8_12_22/0.55)] backdrop-blur-[2px]" onClick={onClose}>
       <div
         ref={ref}
         tabIndex={-1}
@@ -246,11 +292,66 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
         aria-modal="true"
         aria-label={label}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92dvh] w-full max-w-[440px] animate-sheet overflow-y-auto rounded-t-[24px] bg-night-800 px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))] ring-1 ring-night-line outline-none"
+        className="flex max-h-[94dvh] w-full max-w-[440px] animate-sheet flex-col overflow-y-auto rounded-t-sheet border-t border-line bg-night-800 px-5 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgb(0_0_0/0.45)] outline-none"
       >
+        <div className="h-1 w-10 flex-none self-center rounded-sm bg-line" aria-hidden="true" />
         {children}
       </div>
     </div>
+  );
+}
+
+// the handwritten card: ornament hanging on top, message on lined paper
+function Card({ o, children }: { o: O; children: React.ReactNode }) {
+  return (
+    <article className="relative mt-[58px] w-full -rotate-[1.2deg]">
+      <div className="absolute top-[-58px] left-1/2 z-1 -ml-[52px] flex size-[104px] items-center justify-center rounded-full bg-[radial-gradient(circle,rgb(255_200_110/0.55),rgb(255_200_110/0)_68%)]">
+        <Ornament kind={o.kind} size={88} alt />
+      </div>
+      <div className="paper rounded-card px-[26px] pt-[52px] pb-[26px] shadow-[0_24px_50px_rgb(0_0_0/0.45),0_0_0_1px_rgb(122_101_83/0.2)]">
+        <p className="m-0 text-center font-sans text-xs font-medium text-ink-soft">
+          {KIND_NAME[o.kind]}
+          {o.at && ` · ${hungOn(o.at)}`}
+        </p>
+        {children}
+        <p className="m-0 mt-[18px] text-right font-display text-xl font-bold text-ink-red">from. {o.author}</p>
+      </div>
+    </article>
+  );
+}
+
+function Picked({ ornament: o, tree, onClose, onHide }: { ornament: O; tree: Tree; onClose: () => void; onHide: (o: O) => void }) {
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <Sheet label={`${o.author}님의 오너먼트`} onClose={onClose}>
+      <div className="mt-4">
+        <Card o={o}>
+          {o.message !== undefined ? (
+            <p className="m-0 mt-3.5 font-hand text-[30px] leading-[34px] whitespace-pre-line text-ink">{o.message}</p>
+          ) : (
+            <p className="m-0 mt-3.5 flex items-center justify-center gap-1.5 py-4 text-center font-hand text-[28px] leading-[34px] text-ink-soft">
+              <LockIcon size={18} />
+              {tree.owner ? "크리스마스에 열려요" : `${tree.name}님만 크리스마스에 열어봐요`}
+            </p>
+          )}
+        </Card>
+      </div>
+      <div className={`mt-6 grid gap-2.5 ${tree.owner ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
+        {tree.owner &&
+          (confirm ? (
+            <button type="button" className="btn-ghost text-[#ff8a7a]" onClick={() => onHide(o)}>
+              진짜 내리기
+            </button>
+          ) : (
+            <button type="button" className="btn-ghost" onClick={() => setConfirm(true)}>
+              트리에서 내리기
+            </button>
+          ))}
+        <button type="button" className="btn" onClick={onClose}>
+          닫기
+        </button>
+      </div>
+    </Sheet>
   );
 }
 
@@ -258,57 +359,12 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
 function ManualCopy({ title, link, note, onClose }: { title: string; link: string; note: string; onClose: () => void }) {
   return (
     <Sheet label={title} onClose={onClose}>
-      <h2 className="m-0 font-display text-[22px] font-bold text-bulb-100">{title}</h2>
+      <h2 className="title mt-3.5 text-[22px] tracking-[-0.4px]">{title}</h2>
       <p className="m-0 mt-2 text-sm leading-relaxed text-muted">{note}</p>
-      <textarea
-        readOnly
-        value={link}
-        rows={3}
-        aria-label={title}
-        onFocus={(e) => e.currentTarget.select()}
-        autoFocus
-        className="field mt-4 resize-none py-3 font-mono text-sm leading-relaxed break-all"
-      />
+      <textarea readOnly value={link} rows={3} aria-label={title} onFocus={(e) => e.currentTarget.select()} autoFocus className="field mt-4 resize-none py-3 text-sm leading-relaxed break-all" />
       <button type="button" className="btn mt-4" onClick={onClose}>
         닫기
       </button>
-    </Sheet>
-  );
-}
-
-function Picked({ ornament: o, tree, onClose, onHide }: { ornament: Ornament; tree: Tree; onClose: () => void; onHide: (o: Ornament) => void }) {
-  const [confirm, setConfirm] = useState(false);
-  return (
-    <Sheet label={`${o.author}님의 오너먼트`} onClose={onClose}>
-      <div className="flex flex-col items-center text-center">
-        <OrnamentArt kind={o.kind} size={84} loop={false} />
-        <p className="m-0 mt-2 text-sm text-muted">{KIND_NAME[o.kind]}</p>
-        <p className="m-0 mt-1 font-display text-2xl font-bold text-bulb-100">from. {o.author}</p>
-      </div>
-
-      {o.message !== undefined ? (
-        <p className="m-0 mt-4 rounded-xl bg-paper px-5 py-4 font-display text-[17px] leading-relaxed whitespace-pre-wrap text-paper-ink">{o.message}</p>
-      ) : (
-        <p className="m-0 mt-4 rounded-xl bg-night-950 px-5 py-4 text-center text-[15px] leading-relaxed text-muted">
-          🔒 {tree.owner ? "메시지는 크리스마스에 열려요" : `메시지는 크리스마스에 ${tree.name}님만 볼 수 있어요`}
-        </p>
-      )}
-
-      <div className="mt-5 flex gap-2.5">
-        {tree.owner &&
-          (confirm ? (
-            <button type="button" className="btn btn-ghost w-[46%] text-base text-berry-300" onClick={() => onHide(o)}>
-              진짜 내리기
-            </button>
-          ) : (
-            <button type="button" className="btn btn-ghost w-[46%] text-base" onClick={() => setConfirm(true)}>
-              트리에서 내리기
-            </button>
-          ))}
-        <button type="button" className="btn flex-1" onClick={onClose}>
-          닫기
-        </button>
-      </div>
     </Sheet>
   );
 }
@@ -354,66 +410,161 @@ function HangSheet({ id, owner, onClose, onDone }: { id: string; owner: string; 
 
   return (
     <Sheet label={`${owner}님 트리에 오너먼트 달기`} onClose={onClose}>
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <h2 className="m-0 font-display text-[22px] leading-tight font-bold text-bulb-100">{owner}님 트리에 뭘 달아줄까요?</h2>
+      <form onSubmit={submit} className="flex flex-col">
+        <h2 className="title mt-3.5 text-[22px] tracking-[-0.4px]">{owner}님 트리에 뭘 달아줄까요?</h2>
 
-        <fieldset className="m-0 grid grid-cols-4 gap-2 border-0 p-0">
-          <legend className="sr-only">오너먼트 고르기</legend>
+        <fieldset className="m-0 mt-3.5 grid grid-cols-4 gap-2 border-0 p-0">
+          <legend className="sr-only">오너먼트 종류</legend>
           {KINDS.map((k) => (
             <label
               key={k}
-              className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl py-2.5 ring-1 ring-inset has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-bulb-300 ${
-                kind === k ? "bg-bulb-300/12 ring-2 ring-bulb-300" : "bg-night-900 ring-night-line"
+              className={`flex h-[84px] cursor-pointer flex-col items-center justify-center gap-1 rounded-tile border-[1.5px] has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold ${
+                kind === k ? "border-gold bg-gold/14" : "border-line bg-night-700"
               }`}
             >
               <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} className="sr-only" />
-              <OrnamentArt kind={k} size={40} loop={false} />
-              <span className={`text-xs whitespace-nowrap ${kind === k ? "font-semibold text-bulb-300" : "text-muted"}`}>{KIND_NAME[k]}</span>
+              <Ornament kind={k} size={44} />
+              <span className={`text-xs font-medium whitespace-nowrap ${kind === k ? "text-gold-soft" : "text-muted"}`}>{KIND_NAME[k]}</span>
             </label>
           ))}
         </fieldset>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="author" className="text-sm font-semibold">
-            보내는 사람
-          </label>
-          <input id="author" className="field h-12" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={10} required placeholder="예: 상연, 엄마, 옆자리 동기" autoComplete="nickname" />
-        </div>
+        <label htmlFor="author" className="mt-[18px] text-[13px] font-semibold text-muted">
+          보내는 사람
+        </label>
+        <input id="author" className="field mt-1.5 h-12" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={10} required placeholder="이름 또는 별명" autoComplete="nickname" />
 
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between">
-            <label htmlFor="message" className="text-sm font-semibold">
-              메시지
-            </label>
-            <span className="font-mono text-xs text-dim">{message.length}/120</span>
-          </div>
-          <textarea
-            id="message"
-            className="field min-h-28 resize-none py-3 leading-relaxed"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            maxLength={120}
-            required
-            placeholder="크리스마스에 열어볼 한마디"
-          />
-          <p className="m-0 text-xs text-dim">🔒 {owner}님만, 크리스마스에 읽을 수 있어요.</p>
+        <div className="mt-3.5 flex items-baseline justify-between">
+          <label htmlFor="message" className="text-[13px] font-semibold text-muted">
+            메시지 카드
+          </label>
+          <span className="text-xs text-faint">{message.length}/120</span>
         </div>
+        <textarea
+          id="message"
+          className="paper mt-1.5 h-[116px] resize-none rounded-[14px] border-0 px-4 py-3 font-hand text-[26px] leading-[34px] shadow-[inset_0_0_0_1px_rgb(122_101_83/0.25)] outline-none placeholder:text-ink-soft/70 focus:shadow-[inset_0_0_0_2px_var(--color-gold)]"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          maxLength={120}
+          required
+          placeholder="크리스마스에 열어볼 한마디"
+        />
+        <p className="m-0 mt-2 flex items-center gap-1.5 text-xs text-faint">
+          <LockIcon />
+          {owner}님만, 크리스마스에 읽을 수 있어요
+        </p>
 
         {error && (
-          <p role="alert" className="m-0 text-sm text-berry-300">
+          <p role="alert" className="m-0 mt-2 text-sm text-[#ff8a7a]">
             {error}
           </p>
         )}
 
-        <div className="flex gap-2.5">
-          <button type="button" className="btn btn-ghost w-[34%] text-base" onClick={onClose}>
+        <div className="mt-4 grid grid-cols-[1fr_2fr] gap-2.5">
+          <button type="button" className="btn-ghost" onClick={onClose}>
             취소
           </button>
-          <button type="submit" className="btn flex-1" disabled={busy || !author.trim() || !message.trim()}>
-            {busy ? "다는 중…" : "트리에 달기"}
+          <button type="submit" className="btn" disabled={busy || !author.trim() || !message.trim()}>
+            {busy ? "다는 중…" : `${KIND_NAME[kind]} 트리에 달기`}
           </button>
         </div>
       </form>
     </Sheet>
+  );
+}
+
+// Dec 25: the owner opens the messages one by one
+function Reveal({ tree, onShowTree, flash }: { tree: Tree; onShowTree: () => void; flash: (m: string) => void }) {
+  const cards = [...tree.ornaments].filter((o) => o.message !== undefined).sort((a, b) => a.slot - b.slot);
+  const [i, setI] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const o = cards[i];
+
+  async function save() {
+    if (!o) return;
+    setSaving(true);
+    try {
+      const blob = await makeCardImage(o, tree.name);
+      const file = new File([blob], `from-${o.author}.png`, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (err) {
+          if ((err as Error).name === "AbortError") return;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      flash("카드를 저장했어요");
+    } catch {
+      flash("저장이 안 됐어요. 화면을 캡처해 주세요");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="relative flex min-h-[calc(100dvh-46px)] flex-col items-center">
+      <div aria-hidden="true" className="pointer-events-none absolute top-[126px] left-1/2 w-full max-w-[360px] -translate-x-1/2 opacity-22 blur-[2px]">
+        <TreeView ornaments={tree.ornaments} label="" />
+      </div>
+
+      <p className="chip relative m-0 bg-gold font-bold text-[#2a1a08]">12월 25일 · 메리 크리스마스</p>
+      <h1 className="title relative mt-3 text-center text-[30px] leading-[1.25] tracking-[-0.6px]">{tree.name}님의 트리가 열렸어요</h1>
+      <p className="relative m-0 mt-1 text-sm text-muted">
+        메시지 <b className="font-bold text-gold">{cards.length}</b>통 · 하나씩 열어보세요
+      </p>
+
+      {o ? (
+        <>
+          <div className="relative mt-auto w-full pt-10" key={o.id}>
+            <div className="animate-sheet">
+              <Card o={o}>
+                <p className="m-0 mt-3.5 font-hand text-[34px] leading-[40px] whitespace-pre-line text-ink">{o.message}</p>
+              </Card>
+            </div>
+          </div>
+
+          <nav aria-label="메시지 넘기기" className="relative mt-[22px] mb-auto flex items-center gap-4">
+            <button type="button" aria-label="이전 메시지" className="flex size-11 items-center justify-center rounded-full border border-line bg-night-700 text-cream" onClick={() => setI(i - 1)} disabled={i === 0}>
+              <PrevIcon />
+            </button>
+            <span className="min-w-[52px] text-center text-sm font-semibold text-muted">
+              <b className="text-cream">{i + 1}</b> / {cards.length}
+            </span>
+            <button type="button" aria-label="다음 메시지" className="flex size-11 items-center justify-center rounded-full border border-line bg-night-700 text-cream" onClick={() => setI(i + 1)} disabled={i >= cards.length - 1}>
+              <NextIcon />
+            </button>
+          </nav>
+
+          <div className="relative mt-6 grid w-full grid-cols-2 gap-2.5">
+            <button type="button" className="btn-ghost" onClick={save} disabled={saving}>
+              <DownloadIcon />
+              {saving ? "만드는 중…" : "카드 저장"}
+            </button>
+            {i < cards.length - 1 ? (
+              <button type="button" className="btn" onClick={() => setI(i + 1)}>
+                다음 메시지
+              </button>
+            ) : (
+              <button type="button" className="btn" onClick={onShowTree}>
+                트리 보기
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="relative m-auto text-center font-hand text-[30px] text-muted">이번엔 메시지가 없었어요. 내년엔 꼭!</p>
+      )}
+
+      <button type="button" onClick={onShowTree} className="relative mt-3 px-2 py-1 text-sm font-medium text-muted">
+        트리 전체 보기 →
+      </button>
+    </div>
   );
 }

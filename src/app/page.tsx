@@ -2,58 +2,40 @@ import Snow from "@/components/Snow";
 import TreeView from "@/components/TreeView";
 import CreateTree from "@/components/CreateTree";
 import Footer from "@/components/Footer";
-import { KINDS, type Ornament } from "@/lib/ornaments";
+import type { Kind, Ornament } from "@/lib/ornaments";
 
-// a few ornaments so the empty tree on the first screen doesn't look sad
-const SAMPLE: Ornament[] = [0, 3, 5, 8, 10, 12, 15, 17, 19].map((slot, i) => ({
-  id: slot,
-  slot,
-  kind: KINDS[i % KINDS.length],
-  author: "",
-}));
-
-const STEPS = [
-  ["트리 만들기", "이름만 쓰면 바로 생겨요"],
-  ["링크 보내기", "친구, 가족이 오너먼트에 메시지를 달아요"],
-  ["크리스마스에 열기", "12월 25일에 나만 읽을 수 있어요"],
+// ornaments on the preview tree, same as the design's home screen
+const SAMPLE: [number, Kind][] = [
+  [0, "star"], [1, "ball"], [2, "bell"], [3, "gingerbread"], [4, "star"], [5, "candycane"],
+  [6, "gift"], [7, "stocking"], [8, "ball"], [9, "snowman"], [10, "gingerbread"],
 ];
+const PREVIEW: Ornament[] = SAMPLE.map(([slot, kind]) => ({ id: slot, slot, kind, author: "" }));
+
+const STEPS = ["트리 만들기", "링크 보내기", "25일에 열어보기"];
 
 export default function Home() {
   return (
     <>
       <Snow />
-      <main className="relative z-1 mx-auto max-w-[440px] px-4 pt-10 pb-[120px]">
-        <div className="text-center">
-          <span className="inline-block rounded-full bg-night-950/60 px-3 py-1.5 text-xs leading-none font-medium text-bulb-300 ring-1 ring-bulb-300/35 ring-inset">
-            향수병 게임즈 · 크리스마스 편
-          </span>
-          <h1 className="m-0 mt-4 font-display text-[44px] leading-[1.1] font-bold tracking-[-0.02em] text-bulb-100 [text-shadow:0_0_28px_rgb(255_210_122/0.45)]">
-            내 트리를 꾸며줘
-          </h1>
-          <p className="m-0 mt-3 font-brush text-[26px] leading-none text-berry-300">멀리 있어도, 크리스마스엔 같이</p>
+      <main className="relative z-1 mx-auto flex min-h-dvh max-w-[440px] flex-col items-center px-5 pt-7 pb-[calc(22px+env(safe-area-inset-bottom))]">
+        <p className="chip m-0 border border-line bg-night-800/80 font-medium text-muted">향수병 게임즈 · 크리스마스 편</p>
+        <h1 className="title mt-3.5 text-[40px] leading-[1.2] tracking-[-1px]">내 트리를 꾸며줘</h1>
+        <p className="m-0 mt-1 font-hand text-[28px] leading-[1.1] text-gold">멀리 있어도, 크리스마스엔 같이</p>
+
+        <div className="mt-2 w-[300px] max-w-full flex-none">
+          <TreeView ornaments={PREVIEW} label="오너먼트가 달린 크리스마스 트리 예시" />
         </div>
 
-        <div className="mt-4">
-          <TreeView ornaments={SAMPLE} label="오너먼트가 달린 크리스마스 트리 예시" />
-        </div>
-
-        <p className="m-0 mt-2 text-center text-[15px] leading-relaxed">
-          친구, 가족이 오너먼트에 메시지를 달아주는 트리.
-          <br />
-          멀리 있어도 크리스마스에 같이 열어봐요.
-        </p>
-
-        <ol className="m-0 mt-6 grid list-none grid-cols-3 gap-2 p-0">
-          {STEPS.map(([title, desc], i) => (
-            <li key={title} className="card flex flex-col items-center gap-1.5 px-2 py-3.5 text-center shadow-none">
-              <span className="flex size-7 items-center justify-center rounded-full bg-bulb-300 font-mono text-[13px] font-bold text-night-950">{i + 1}</span>
-              <span className="text-sm font-semibold">{title}</span>
-              <span className="text-xs leading-snug text-muted">{desc}</span>
+        <ol className="m-0 mt-1.5 grid w-full list-none grid-cols-3 gap-2 p-0">
+          {STEPS.map((s, i) => (
+            <li key={s} className="flex flex-col items-center gap-1 text-[13px] text-muted">
+              <span className="flex size-6 items-center justify-center rounded-full border-[1.5px] border-gold text-xs font-bold text-gold">{i + 1}</span>
+              {s}
             </li>
           ))}
         </ol>
 
-        <div className="mt-6">
+        <div className="mt-auto w-full pt-6">
           <CreateTree />
         </div>
         <Footer />

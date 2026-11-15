@@ -1,73 +1,80 @@
 @import "tailwindcss";
 
-/* same family as 향수병 포차 (night + bulb light), plus pine and snow for Christmas */
+/* tokens from the design handoff (tokens.css), as Tailwind theme values */
 @theme {
-  --color-night-950: #090c14;
-  --color-night-900: #0f1422;
-  --color-night-800: #182033;
-  --color-night-700: #232d45;
-  --color-night-line: #313d5a;
+  --color-night-900: #0d1322; /* page */
+  --color-night-800: #151d30; /* sheet, card */
+  --color-night-700: #1e2840; /* input, tile, secondary button */
+  --color-line: #2c3754;
 
-  --color-pine-300: #6fbf8e;
-  --color-pine-500: #2f7a52;
-  --color-pine-700: #1f5139;
-  --color-berry-300: #ff8a7a;
-  --color-berry-500: #e0483c;
-  --color-bulb-100: #fff3d6;
-  --color-bulb-300: #ffd27a;
-  --color-snow: #eef3f8;
+  --color-cream: #f6efe3;
+  --color-title: #fff6e6;
+  --color-muted: #aeb5c6;
+  --color-faint: #8590a6;
 
-  --color-cream: #f6ead4;
-  --color-muted: #b6b2a8;
-  --color-dim: #8f8c86;
+  --color-gold: #f4be4f;
+  --color-gold-soft: #ffe29a;
+  --color-ember: #c7392d;
+  --color-ornament-red: #d9493c;
+  --color-on-ember: #fff6ea;
+  --color-pine: #2c7556;
 
-  --color-paper: #f5ecdb;
-  --color-paper-ink: #2b221a;
-  --color-paper-muted: #6b5e4e;
+  --color-paper: #fbf4e6;
+  --color-ink: #3b2a1f;
+  --color-ink-soft: #7a6553;
+  --color-ink-red: #b8352b;
 
   --font-display: "Gowun Batang", serif;
   --font-sans: "IBM Plex Sans KR", system-ui, sans-serif;
-  --font-brush: "Nanum Brush Script", cursive;
-  --font-mono: "Nanum Gothic Coding", ui-monospace, monospace;
+  --font-hand: "Nanum Pen Script", cursive;
 
-  --radius-card: 20px;
   --radius-btn: 16px;
-  --shadow-card: 0 20px 40px rgb(0 0 0 / 0.35);
+  --radius-sheet: 28px;
+  --radius-card: 20px;
+  --radius-tile: 16px;
+  --radius-input: 12px;
 
-  --animate-twinkle: twinkle 2.2s ease-in-out infinite;
-  --animate-popin: popin 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
-  --animate-sway: sway 3.6s ease-in-out infinite;
+  --animate-twinkle: twinkle 2.4s ease-in-out infinite;
+  --animate-hang: hang 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  --animate-sway: sway 4s ease-in-out infinite;
   --animate-fall: fall linear infinite;
   --animate-sheet: sheet 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  --animate-glow: glow 1.8s ease-in-out infinite;
 
-  @keyframes twinkle { 0%,100%{opacity:1} 50%{opacity:.45} }
-  @keyframes popin { 0%{transform:translateY(-30px) scale(.4);opacity:0} 100%{transform:none;opacity:1} }
-  @keyframes sway { 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
-  @keyframes fall { 0%{transform:translateY(-10vh) translateX(0)} 100%{transform:translateY(110vh) translateX(20px)} }
+  @keyframes twinkle { 0%,100%{opacity:1} 50%{opacity:.5} }
+  @keyframes hang { 0%{transform:translateY(-40px) scale(.5);opacity:0} 100%{transform:none;opacity:1} }
+  @keyframes sway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+  @keyframes fall { 0%{transform:translateY(-10vh)} 100%{transform:translateY(110vh) translateX(20px)} }
   @keyframes sheet { 0%{transform:translateY(40px);opacity:0} 100%{transform:none;opacity:1} }
+  @keyframes glow { 0%,100%{box-shadow:0 0 12px rgb(255 200 100 / .45)} 50%{box-shadow:0 0 22px rgb(255 200 100 / .8)} }
 }
 
-/* one dark look on purpose (it's a snowy night), so no light mode */
+/* one dark look on purpose (snowy night), so no light mode */
 :root {
   color-scheme: dark;
 }
 
 @layer base {
-  html,
-  body {
+  html {
     background-color: var(--color-night-900);
   }
+  /* .night from the handoff: warm glow behind the tree + a few still snow dots */
   body {
     @apply font-sans text-cream antialiased;
     word-break: keep-all; /* Korean wraps between words, not mid-word */
     min-height: 100dvh;
+    background-color: var(--color-night-900);
     background-image:
-      radial-gradient(ellipse 90% 45% at 50% 0%, rgb(255 210 122 / 0.12), transparent 70%),
-      linear-gradient(180deg, #0b1020 0%, #0f1422 55%, #131a2b 100%);
-    background-attachment: fixed;
+      radial-gradient(ellipse 70% 45% at 50% 46%, rgb(255 184 77 / 0.13), rgb(255 184 77 / 0) 70%),
+      radial-gradient(1.6px 1.6px at 30px 40px, rgb(255 255 255 / 0.85) 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 120px 90px, rgb(255 255 255 / 0.55) 50%, transparent 51%),
+      radial-gradient(2.2px 2.2px at 160px 20px, rgb(255 255 255 / 0.65) 50%, transparent 51%),
+      radial-gradient(1px 1px at 70px 150px, rgb(255 255 255 / 0.5) 50%, transparent 51%);
+    background-size: 100% 100vh, 190px 190px, 230px 230px, 170px 170px, 140px 140px;
+    background-repeat: no-repeat, repeat, repeat, repeat, repeat;
   }
   :focus-visible {
-    outline: 3px solid var(--color-bulb-300);
+    outline: 3px solid var(--color-gold);
     outline-offset: 3px;
   }
   button {
@@ -75,32 +82,46 @@
   }
   button:disabled {
     cursor: default;
-    opacity: 0.45;
+    opacity: 0.5;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-faint);
   }
 }
 
 @layer components {
   .btn {
-    @apply flex h-14 w-full items-center justify-center gap-2 rounded-btn px-4 text-lg font-bold tracking-[-0.01em] text-white transition-transform duration-75;
-    background: linear-gradient(180deg, #f0685c, #e0483c 50%, #c23a30);
+    @apply flex h-14 w-full items-center justify-center gap-2 rounded-btn border-0 bg-ember px-4 text-[17px] font-bold text-on-ember no-underline transition-transform duration-75;
     box-shadow:
-      inset 0 1px 0 rgb(255 220 210 / 0.55),
-      inset 0 -3px 0 rgb(100 20 10 / 0.35),
-      0 10px 28px rgb(224 72 60 / 0.35);
+      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      0 10px 28px rgb(199 57 45 / 0.35);
   }
   .btn:active:not(:disabled) {
     transform: translateY(2px);
   }
   .btn-ghost {
-    @apply text-cream ring-1 ring-night-line ring-inset;
-    background: rgb(255 255 255 / 0.07);
-    box-shadow: none;
+    @apply flex h-14 w-full items-center justify-center gap-1.5 rounded-btn border border-line bg-night-700 px-4 text-base font-semibold text-cream no-underline transition-transform duration-75;
   }
-  .card {
-    @apply rounded-card bg-night-800/90 shadow-card ring-1 ring-night-line ring-inset;
+  .btn-ghost:active:not(:disabled) {
+    transform: translateY(2px);
   }
   .field {
-    @apply w-full rounded-xl bg-night-950 px-3.5 text-base text-cream ring-1 ring-night-line ring-inset placeholder:text-dim focus:ring-2 focus:ring-bulb-300 focus:outline-none;
+    @apply w-full rounded-input border border-line bg-night-700 px-3.5 text-base text-cream outline-none focus:border-gold;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-xs leading-normal;
+  }
+  .title {
+    @apply m-0 font-display font-bold text-title;
+    text-shadow: 0 0 24px rgb(255 190 90 / 0.32);
+  }
+  /* lined paper: line-height has to match the 34px stripe */
+  .paper {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 33px, rgb(122 101 83 / 0.22) 33px, rgb(122 101 83 / 0.22) 34px);
+    background-position: 0 14px;
   }
 }
 

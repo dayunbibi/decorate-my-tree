@@ -3,7 +3,7 @@
 A Christmas web app from **향수병 게임즈** (Homesick Games) — small web games I make in Toronto because I miss Korea.
 
 Make a tree, send the link to friends and family, and they hang an ornament with a short message.
-There are 8 hand-drawn ornaments: ball, star, bell, candy cane, stocking, gift, snowman and gingerbread.
+There are 8 ornaments: ball, star, bell, candy cane, stocking, gift, snowman and gingerbread.
 Anyone can see who hung what, but **only the tree owner can read the messages, and only on Christmas** (Dec 25, Korea time).
 
 ## How it works
@@ -23,7 +23,9 @@ Anyone can see who hung what, but **only the tree owner can read the messages, a
 - Tailwind CSS v4
 - Supabase Postgres, called through PostgREST RPC with plain `fetch` (no SDK). RLS is on with no policies,
   so only the server's secret key can call the functions.
-- Ornaments and the tree are hand-written SVG components.
+- The tree (`public/tree/tree-base.svg`) and ornaments (`public/ornaments/*.svg`) come from a design handoff.
+  Ornaments sit on 20 fixed spots per tree (`src/lib/slots.ts`); the DB hands out slots in order and a
+  fill order spreads them around the tree. More than 20 go on the next page.
 
 ## Run locally
 
@@ -44,4 +46,5 @@ To see the after-Christmas screen early, set `NEXT_PUBLIC_OPEN_AT=2020-01-01T00:
 - `src/lib/server/` — DB calls, hashing, input cleaning
 - `src/app/api/trees/` — create tree, get tree, hang ornament, hide ornament
 - `src/components/TreeClient.tsx` — the tree page (owner and visitor views)
-- `src/components/OrnamentArt.tsx`, `TreeArt.tsx` — the drawings
+- `src/components/TreeView.tsx` — tree + ornaments, all in % so it scales as one layer
+- `src/lib/cardImage.ts` — the "카드 저장" picture of one message (canvas)
