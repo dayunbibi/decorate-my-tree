@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KIND_NAME, KINDS, MAX_ORNAMENTS, OPEN_AT, PER_PAGE, type Kind, type Ornament, type Tree } from "@/lib/ornaments";
 import { daysUntil, readMine, saveMine } from "@/lib/myTrees";
+import { copyText } from "@/lib/copy";
 import TreeView from "./TreeView";
 import OrnamentArt from "./OrnamentArt";
 import BottomBar from "./BottomBar";
@@ -21,6 +22,7 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState("");
   const [days, setDays] = useState<number | null>(null);
+  const [manual, setManual] = useState<{ title: string; link: string; note: string } | null>(null);
 
   const refresh = useCallback(
     async (ownerKey = key) => {
@@ -60,27 +62,25 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
 
   const treeUrl = () => `${location.origin}/t/${id}`;
 
+  // phones: the share sheet. Otherwise copy, and if even that's blocked, show the link to copy by hand
   async function share() {
     const text = `내 트리를 꾸며줘 🎄 오너먼트 하나 달아줘! 메시지는 크리스마스에 열어볼게`;
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({ title: `${tree.name}님의 트리`, text, url: treeUrl() });
         return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return; // closed the share sheet
       }
-      await navigator.clipboard.writeText(`${text} ${treeUrl()}`);
-      flash("링크를 복사했어요! 친구들한테 보내주세요");
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") flash("복사가 안 됐어요. 주소창 링크를 직접 복사해 주세요");
     }
+    if (await copyText(`${text} ${treeUrl()}`)) flash("링크를 복사했어요! 친구들한테 보내주세요");
+    else setManual({ title: "트리 링크", link: treeUrl(), note: "꾹 눌러서 복사한 다음 친구들한테 보내주세요." });
   }
 
   async function copyKeyLink() {
-    try {
-      await navigator.clipboard.writeText(`${treeUrl()}#k=${key}`);
-      flash("열쇠 링크를 복사했어요. 나만 아는 곳에 저장해 두세요");
-    } catch {
-      flash("복사가 안 됐어요. 다시 눌러주세요");
-    }
+    const link = `${treeUrl()}#k=${key}`;
+    if (await copyText(link)) flash("열쇠 링크를 복사했어요. 나만 아는 곳에 저장해 두세요");
+    else setManual({ title: "🔑 열쇠 링크", link, note: "꾹 눌러서 복사한 다음 메모장 같은 나만 보는 곳에 저장해 두세요. 친구한테는 보내지 마세요!" });
   }
 
   async function hide(o: Ornament) {
@@ -215,6 +215,7 @@ export default function TreeClient({ id, initial }: { id: string; initial: Tree 
       </BottomBar>
 
       {picked && <Picked ornament={picked} tree={tree} onClose={() => setPicked(null)} onHide={hide} />}
+      {manual && <ManualCopy {...manual} onClose={() => setManual(null)} />}
       {hanging && <HangSheet id={id} owner={tree.name} onClose={() => setHanging(false)} onDone={onHung} />}
     </>
   );
@@ -250,6 +251,28 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
         {children}
       </div>
     </div>
+  );
+}
+
+// last resort when the browser won't let us copy: show the link, already selected
+function ManualCopy({ title, link, note, onClose }: { title: string; link: string; note: string; onClose: () => void }) {
+  return (
+    <Sheet label={title} onClose={onClose}>
+      <h2 className="m-0 font-display text-[22px] font-bold text-bulb-100">{title}</h2>
+      <p className="m-0 mt-2 text-sm leading-relaxed text-muted">{note}</p>
+      <textarea
+        readOnly
+        value={link}
+        rows={3}
+        aria-label={title}
+        onFocus={(e) => e.currentTarget.select()}
+        autoFocus
+        className="field mt-4 resize-none py-3 font-mono text-sm leading-relaxed break-all"
+      />
+      <button type="button" className="btn mt-4" onClick={onClose}>
+        닫기
+      </button>
+    </Sheet>
   );
 }
 
