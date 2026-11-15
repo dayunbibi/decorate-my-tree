@@ -23,7 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tree) return { title: "내 트리를 꾸며줘" };
   const title = `${tree.name}님의 트리를 꾸며줘 🎄`;
   const description = `오너먼트 ${tree.ornaments.length}개 달렸어요. 오너먼트 하나 달아주세요! 메시지는 크리스마스에 열려요.`;
-  return { title, description, openGraph: { title, description }, twitter: { title, description } };
+  // the picture comes from ./opengraph-image.tsx (Next adds it on its own)
+  return { title, description, openGraph: { title, description, type: "website" }, twitter: { card: "summary_large_image", title, description } };
 }
 
 export default async function TreePage({ params }: Props) {
